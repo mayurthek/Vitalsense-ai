@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import RiskBadge from './RiskBadge';
 import ECGChart from './ECGChart';
 import { Heart, Activity, Droplets, Thermometer, Wind, User, Bed } from 'lucide-react';
@@ -7,13 +7,21 @@ export default function PatientCard({ patient, onClick, style }) {
   const vitals = patient.current_vitals || {};
   const riskLevel = patient.risk_level || 'LOW';
   const isCritical = riskLevel === 'CRITICAL';
+  const [pulse, setPulse] = useState(false);
+
+  // Trigger pulse animation when vitals change
+  useEffect(() => {
+    setPulse(true);
+    const timer = setTimeout(() => setPulse(false), 300);
+    return () => clearTimeout(timer);
+  }, [vitals.heart_rate, vitals.spo2, vitals.bp_systolic]);
 
   return (
     <div
       onClick={onClick}
-      className={`vital-card p-5 cursor-pointer animate-fade-in hover:-translate-y-1 transition-all duration-300 ${
+      className={`vital-card p-5 cursor-pointer hover:-translate-y-1 transition-all duration-300 ${
         isCritical ? 'critical' : 'hover:border-[#00d4ff]/30 hover:shadow-cyan'
-      }`}
+      } ${pulse ? 'ring-1 ring-[#00d4ff]/30' : ''}`}
       style={style}
       data-testid={`patient-card-${patient.id}`}
     >
@@ -85,9 +93,9 @@ export default function PatientCard({ patient, onClick, style }) {
 
 function VitalItem({ icon: Icon, value, unit, alert }) {
   return (
-    <div className="flex flex-col items-center justify-center p-2 bg-[#0b1320] rounded-lg">
+    <div className="flex flex-col items-center justify-center p-2 bg-[#0b1320] rounded-lg transition-all duration-300">
       <Icon className={`w-4 h-4 mb-1 ${alert ? 'text-red-400' : 'text-[#64748b]'}`} />
-      <span className={`text-lg font-mono font-bold ${alert ? 'text-red-400' : 'text-[#e6edf3]'}`}>
+      <span className={`text-lg font-mono font-bold transition-all duration-300 ${alert ? 'text-red-400' : 'text-[#e6edf3]'}`}>
         {value}
       </span>
       <span className="text-xs text-[#64748b]">{unit}</span>
