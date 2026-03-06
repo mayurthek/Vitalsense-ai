@@ -60,3 +60,21 @@ export const patientsAPI = {
 export const alertsAPI = {
   getAll: () => api.get('/alerts'),
 };
+
+// Multimodal API
+export const multimodalAPI = {
+  getAll: (patientId) => api.get('/multimodal', { params: { patient_id: patientId } }),
+  getById: (id) => api.get(`/multimodal/${id}`),
+  create: (data) => api.post('/multimodal', data),
+  update: (id, data) => api.put(`/multimodal/${id}`, data),
+  delete: (id) => api.delete(`/multimodal/${id}`),
+};
+
+// Baseline API
+export const baselineAPI = {
+  getAll: (patientId) => api.get('/baseline', { params: { patient_id: patientId } }),
+  getById: (id) => api.get(`/baseline/${id}`),
+  create: (data) => api.post('/baseline', data),
+  update: (id, data) => api.put(`/baseline/${id}`, data),
+  delete: (id) => api.delete(`/baseline/${id}`),
+};

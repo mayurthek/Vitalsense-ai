@@ -1,17 +1,20 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { patientsAPI } from '../services/api';
+import { patientsAPI, multimodalAPI, baselineAPI } from '../services/api';
 import { useSocket } from '../context/SocketContext';
 import Navbar from '../components/Navbar';
 import VitalChart from '../components/VitalChart';
 import ECGChart from '../components/ECGChart';
 import RiskBadge from '../components/RiskBadge';
+import MultimodalPanel from '../components/MultimodalPanel';
+import BaselinePanel from '../components/BaselinePanel';
 import { Skeleton } from '../components/ui/skeleton';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { toast } from 'sonner';
 import { 
   ArrowLeft, Heart, Thermometer, Wind, Activity, 
   Droplets, AlertTriangle, Clock, User, Phone,
-  Pill, AlertCircle
+  Pill, AlertCircle, TrendingDown, FileText, Target
 } from 'lucide-react';
 
 export default function PatientDetail() {
@@ -21,6 +24,7 @@ export default function PatientDetail() {
   const [loading, setLoading] = useState(true);
   const [liveVitals, setLiveVitals] = useState(null);
   const [vitalHistory, setVitalHistory] = useState([]);
+  const [predictiveWarning, setPredictiveWarning] = useState(false);
   
   const { joinPatientRoom, leavePatientRoom, subscribeToPatientVitals, unsubscribeFromPatientVitals } = useSocket();
 
@@ -30,9 +34,10 @@ export default function PatientDetail() {
 
     const handleVitals = (data) => {
       setLiveVitals(data);
+      setPredictiveWarning(data.predictive_warning || false);
       setVitalHistory(prev => {
         const newHistory = [...prev, data.vitals];
-        return newHistory.slice(-900); // Keep last 30 minutes
+        return newHistory.slice(-600);
       });
     };
 
@@ -49,6 +54,7 @@ export default function PatientDetail() {
       const response = await patientsAPI.getById(id);
       setPatient(response.data);
       setVitalHistory(response.data.vital_history || []);
+      setPredictiveWarning(response.data.predictive_warning || false);
     } catch (error) {
       toast.error('Failed to fetch patient data');
       navigate('/');
@@ -112,6 +118,21 @@ export default function PatientDetail() {
             <div className="text-xs text-[#94a3b8] uppercase tracking-wider">Risk Score</div>
           </div>
         </div>
+
+        {/* Predictive Warning Banner */}
+        {predictiveWarning && (
+          <div className="mb-6 p-4 rounded-xl bg-orange-950/50 border-2 border-orange-500 animate-pulse">
+            <div className="flex items-center gap-3">
+              <TrendingDown className="w-6 h-6 text-orange-400" />
+              <div>
+                <h3 className="font-bold text-orange-400">Predictive Deterioration Warning</h3>
+                <p className="text-orange-300 text-sm">
+                  Possible patient deterioration in next 30 minutes. Vital trends indicate concerning patterns.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Risk Explanations */}
         {explanations.length > 0 && (
@@ -178,86 +199,131 @@ export default function PatientDetail() {
           </div>
         </div>
 
-        {/* Charts */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-          <div className="vital-card p-5">
-            <h3 className="text-lg font-semibold text-[#e6edf3] mb-4">Heart Rate (30 min)</h3>
-            <VitalChart data={vitalHistory} dataKey="heart_rate" color="#22c55e" unit="bpm" />
-          </div>
-          <div className="vital-card p-5">
-            <h3 className="text-lg font-semibold text-[#e6edf3] mb-4">Blood Pressure (30 min)</h3>
-            <VitalChart data={vitalHistory} dataKey="bp_systolic" color="#00d4ff" unit="mmHg" secondKey="bp_diastolic" />
-          </div>
-          <div className="vital-card p-5">
-            <h3 className="text-lg font-semibold text-[#e6edf3] mb-4">SpO2 (30 min)</h3>
-            <VitalChart data={vitalHistory} dataKey="spo2" color="#4ade80" unit="%" />
-          </div>
-          <div className="vital-card p-5">
-            <h3 className="text-lg font-semibold text-[#e6edf3] mb-4">ECG Waveform</h3>
-            <ECGChart data={vitals.ecg || []} height={150} fullWidth />
-          </div>
-        </div>
-
-        {/* Patient Info & Medical History */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Patient Info */}
-          <div className="vital-card p-5">
-            <h3 className="text-lg font-semibold text-[#e6edf3] mb-4 flex items-center gap-2">
-              <User className="w-5 h-5 text-[#00d4ff]" />
-              Patient Information
-            </h3>
-            <div className="space-y-3 text-sm">
-              <InfoRow label="Age" value={`${patient.age} years`} />
-              <InfoRow label="Gender" value={patient.gender} />
-              <InfoRow label="Blood Group" value={patient.blood_group} />
-              <InfoRow label="Bed" value={patient.ward_bed} />
-            </div>
-          </div>
-
-          {/* Medical History */}
-          <div className="vital-card p-5">
-            <h3 className="text-lg font-semibold text-[#e6edf3] mb-4 flex items-center gap-2">
-              <AlertCircle className="w-5 h-5 text-[#00d4ff]" />
-              Medical History
-            </h3>
-            <div className="grid grid-cols-2 gap-2">
-              {medicalHistory.map(item => (
-                <div 
-                  key={item.label}
-                  className={`px-3 py-2 rounded-lg text-sm ${
-                    item.value 
-                      ? 'bg-red-950/50 border border-red-800 text-red-300'
-                      : 'bg-[#1e293b] text-[#64748b]'
-                  }`}
-                >
-                  {item.label}
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Contact & Medications */}
-          <div className="vital-card p-5">
-            <h3 className="text-lg font-semibold text-[#e6edf3] mb-4 flex items-center gap-2">
-              <Phone className="w-5 h-5 text-[#00d4ff]" />
-              Contact & Care
-            </h3>
-            <div className="space-y-3 text-sm">
-              <InfoRow label="Emergency Contact" value={patient.emergency_contact} />
-              <InfoRow label="Allergies" value={patient.allergies || 'None'} />
-              <div>
-                <div className="text-[#94a3b8] mb-1 flex items-center gap-1">
-                  <Pill className="w-3 h-3" /> Medications
-                </div>
-                <div className="text-[#e6edf3]">{patient.medications || 'None'}</div>
+        {/* Tabs for different sections */}
+        <Tabs defaultValue="charts" className="mb-6">
+          <TabsList className="bg-[#121a2f] border border-slate-800">
+            <TabsTrigger value="charts" className="data-[state=active]:bg-[#00d4ff] data-[state=active]:text-black">
+              <Activity className="w-4 h-4 mr-2" />
+              Vital Charts
+            </TabsTrigger>
+            <TabsTrigger value="multimodal" className="data-[state=active]:bg-[#00d4ff] data-[state=active]:text-black">
+              <FileText className="w-4 h-4 mr-2" />
+              Multimodal Data
+            </TabsTrigger>
+            <TabsTrigger value="baseline" className="data-[state=active]:bg-[#00d4ff] data-[state=active]:text-black">
+              <Target className="w-4 h-4 mr-2" />
+              Baseline
+            </TabsTrigger>
+            <TabsTrigger value="info" className="data-[state=active]:bg-[#00d4ff] data-[state=active]:text-black">
+              <User className="w-4 h-4 mr-2" />
+              Patient Info
+            </TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="charts" className="mt-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="vital-card p-5">
+                <h3 className="text-lg font-semibold text-[#e6edf3] mb-4">Heart Rate (30 min)</h3>
+                <VitalChart data={vitalHistory} dataKey="heart_rate" color="#22c55e" unit="bpm" />
+              </div>
+              <div className="vital-card p-5">
+                <h3 className="text-lg font-semibold text-[#e6edf3] mb-4">Blood Pressure (30 min)</h3>
+                <VitalChart data={vitalHistory} dataKey="bp_systolic" color="#00d4ff" unit="mmHg" secondKey="bp_diastolic" />
+              </div>
+              <div className="vital-card p-5">
+                <h3 className="text-lg font-semibold text-[#e6edf3] mb-4">SpO2 (30 min)</h3>
+                <VitalChart data={vitalHistory} dataKey="spo2" color="#4ade80" unit="%" />
+              </div>
+              <div className="vital-card p-5">
+                <h3 className="text-lg font-semibold text-[#e6edf3] mb-4">ECG Waveform</h3>
+                <ECGChart data={vitals.ecg || []} height={150} fullWidth />
+              </div>
+              <div className="vital-card p-5">
+                <h3 className="text-lg font-semibold text-[#e6edf3] mb-4">Temperature (30 min)</h3>
+                <VitalChart data={vitalHistory} dataKey="temperature" color="#facc15" unit="°C" />
+              </div>
+              <div className="vital-card p-5">
+                <h3 className="text-lg font-semibold text-[#e6edf3] mb-4">Respiratory Rate (30 min)</h3>
+                <VitalChart data={vitalHistory} dataKey="respiratory_rate" color="#f97316" unit="/min" />
               </div>
             </div>
-          </div>
-        </div>
+          </TabsContent>
+          
+          <TabsContent value="multimodal" className="mt-4">
+            <MultimodalPanel patientId={id} onUpdate={fetchPatient} />
+          </TabsContent>
+          
+          <TabsContent value="baseline" className="mt-4">
+            <BaselinePanel 
+              patientId={id} 
+              baseline={patient.baseline} 
+              currentVitals={vitals}
+              onUpdate={fetchPatient} 
+            />
+          </TabsContent>
+          
+          <TabsContent value="info" className="mt-4">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Patient Info */}
+              <div className="vital-card p-5">
+                <h3 className="text-lg font-semibold text-[#e6edf3] mb-4 flex items-center gap-2">
+                  <User className="w-5 h-5 text-[#00d4ff]" />
+                  Patient Information
+                </h3>
+                <div className="space-y-3 text-sm">
+                  <InfoRow label="Age" value={`${patient.age} years`} />
+                  <InfoRow label="Gender" value={patient.gender} />
+                  <InfoRow label="Blood Group" value={patient.blood_group} />
+                  <InfoRow label="Bed" value={patient.ward_bed} />
+                </div>
+              </div>
+
+              {/* Medical History */}
+              <div className="vital-card p-5">
+                <h3 className="text-lg font-semibold text-[#e6edf3] mb-4 flex items-center gap-2">
+                  <AlertCircle className="w-5 h-5 text-[#00d4ff]" />
+                  Medical History
+                </h3>
+                <div className="grid grid-cols-2 gap-2">
+                  {medicalHistory.map(item => (
+                    <div 
+                      key={item.label}
+                      className={`px-3 py-2 rounded-lg text-sm ${
+                        item.value 
+                          ? 'bg-red-950/50 border border-red-800 text-red-300'
+                          : 'bg-[#1e293b] text-[#64748b]'
+                      }`}
+                    >
+                      {item.label}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Contact & Medications */}
+              <div className="vital-card p-5">
+                <h3 className="text-lg font-semibold text-[#e6edf3] mb-4 flex items-center gap-2">
+                  <Phone className="w-5 h-5 text-[#00d4ff]" />
+                  Contact & Care
+                </h3>
+                <div className="space-y-3 text-sm">
+                  <InfoRow label="Emergency Contact" value={patient.emergency_contact} />
+                  <InfoRow label="Allergies" value={patient.allergies || 'None'} />
+                  <div>
+                    <div className="text-[#94a3b8] mb-1 flex items-center gap-1">
+                      <Pill className="w-3 h-3" /> Medications
+                    </div>
+                    <div className="text-[#e6edf3]">{patient.medications || 'None'}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
 
         {/* Alert History */}
         {patient.alerts && patient.alerts.length > 0 && (
-          <div className="vital-card p-5 mt-6">
+          <div className="vital-card p-5">
             <h3 className="text-lg font-semibold text-[#e6edf3] mb-4 flex items-center gap-2">
               <Clock className="w-5 h-5 text-[#00d4ff]" />
               Recent Alerts

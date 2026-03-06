@@ -12,6 +12,8 @@ class VitalSenseAPITester:
         self.tests_passed = 0
         self.created_doctor_id = None
         self.created_patient_id = None
+        self.created_multimodal_id = None
+        self.created_baseline_id = None
         
     def run_test(self, name, method, endpoint, expected_status, data=None, expect_json=True):
         """Run a single API test"""
@@ -31,6 +33,8 @@ class VitalSenseAPITester:
                 response = requests.post(url, json=data, headers=headers, timeout=10)
             elif method == 'PUT':
                 response = requests.put(url, json=data, headers=headers, timeout=10)
+            elif method == 'DELETE':
+                response = requests.delete(url, headers=headers, timeout=10)
 
             print(f"   Status: {response.status_code}")
             success = response.status_code == expected_status
@@ -208,6 +212,171 @@ class VitalSenseAPITester:
         self.token = temp_token  # Restore token
         return success
 
+    # =================== MULTIMODAL API TESTS ===================
+    
+    def test_create_multimodal(self):
+        """Test creating a multimodal record"""
+        if not self.created_patient_id:
+            print("   ⚠️ Skipped - No patient ID available")
+            return True
+            
+        multimodal_data = {
+            "patient_id": self.created_patient_id,
+            "vitals_notes": "Patient stable, slight increase in HR",
+            "doctor_notes": "Patient responding well to treatment. Continue current medications.",
+            "lab_reports": "CBC: WBC 8.5, RBC 4.2, Hgb 12.5. BMP: Normal. ABG: pH 7.42",
+            "fluid_intake": 1500.0,
+            "urine_output": 800.0,
+            "consciousness_level": "Alert",
+            "ventilator_mode": "None"
+        }
+        success, response = self.run_test("Create Multimodal Record", "POST", "multimodal", 200, multimodal_data)
+        if success and 'id' in response:
+            self.created_multimodal_id = response['id']
+            print(f"   ✅ Multimodal record created with ID: {self.created_multimodal_id}")
+        return success
+
+    def test_get_multimodal(self):
+        """Test fetching multimodal records"""
+        if not self.created_patient_id:
+            print("   ⚠️ Skipped - No patient ID available")
+            return True
+        success, response = self.run_test("Get Multimodal Records", "GET", f"multimodal?patient_id={self.created_patient_id}", 200)
+        if success:
+            print(f"   ✅ Retrieved {len(response)} multimodal records")
+            if response and len(response) > 0:
+                record = response[0]
+                required_fields = ['vitals_notes', 'doctor_notes', 'lab_reports', 'fluid_intake', 'consciousness_level']
+                for field in required_fields:
+                    if field in record:
+                        print(f"   ✅ Has {field}")
+                    else:
+                        print(f"   ⚠️ Missing {field}")
+        return success
+
+    def test_get_multimodal_by_id(self):
+        """Test fetching specific multimodal record"""
+        if not self.created_multimodal_id:
+            print("   ⚠️ Skipped - No multimodal ID available")
+            return True
+        return self.run_test("Get Multimodal by ID", "GET", f"multimodal/{self.created_multimodal_id}", 200)
+
+    def test_update_multimodal(self):
+        """Test updating multimodal record"""
+        if not self.created_multimodal_id:
+            print("   ⚠️ Skipped - No multimodal ID available")
+            return True
+        
+        update_data = {
+            "vitals_notes": "Updated: Patient HR normalized",
+            "consciousness_level": "Verbal",
+            "fluid_intake": 1800.0
+        }
+        return self.run_test("Update Multimodal Record", "PUT", f"multimodal/{self.created_multimodal_id}", 200, update_data)
+
+    def test_delete_multimodal(self):
+        """Test deleting multimodal record"""
+        if not self.created_multimodal_id:
+            print("   ⚠️ Skipped - No multimodal ID available")
+            return True
+        return self.run_test("Delete Multimodal Record", "DELETE", f"multimodal/{self.created_multimodal_id}", 200, expect_json=False)
+
+    # =================== BASELINE API TESTS ===================
+    
+    def test_create_baseline(self):
+        """Test creating patient baseline"""
+        if not self.created_patient_id:
+            print("   ⚠️ Skipped - No patient ID available")
+            return True
+            
+        baseline_data = {
+            "patient_id": self.created_patient_id,
+            "baseline_hr": 75.0,
+            "baseline_bp_systolic": 120.0,
+            "baseline_bp_diastolic": 80.0,
+            "baseline_spo2": 98.0,
+            "baseline_temp": 37.0,
+            "baseline_rr": 16.0
+        }
+        success, response = self.run_test("Create Baseline", "POST", "baseline", 200, baseline_data)
+        if success and 'id' in response:
+            self.created_baseline_id = response['id']
+            print(f"   ✅ Baseline created with ID: {self.created_baseline_id}")
+        return success
+
+    def test_get_baseline(self):
+        """Test fetching baselines"""
+        if not self.created_patient_id:
+            print("   ⚠️ Skipped - No patient ID available")
+            return True
+        success, response = self.run_test("Get Baselines", "GET", f"baseline?patient_id={self.created_patient_id}", 200)
+        if success:
+            print(f"   ✅ Retrieved {len(response)} baselines")
+            if response and len(response) > 0:
+                baseline = response[0]
+                required_fields = ['baseline_hr', 'baseline_bp_systolic', 'baseline_spo2', 'baseline_temp']
+                for field in required_fields:
+                    if field in baseline:
+                        print(f"   ✅ Has {field}")
+                    else:
+                        print(f"   ⚠️ Missing {field}")
+        return success
+
+    def test_get_baseline_by_id(self):
+        """Test fetching specific baseline"""
+        if not self.created_baseline_id:
+            print("   ⚠️ Skipped - No baseline ID available")
+            return True
+        return self.run_test("Get Baseline by ID", "GET", f"baseline/{self.created_baseline_id}", 200)
+
+    def test_update_baseline(self):
+        """Test updating baseline"""
+        if not self.created_baseline_id:
+            print("   ⚠️ Skipped - No baseline ID available")
+            return True
+        
+        update_data = {
+            "baseline_hr": 80.0,
+            "baseline_bp_systolic": 125.0,
+            "baseline_spo2": 99.0
+        }
+        return self.run_test("Update Baseline", "PUT", f"baseline/{self.created_baseline_id}", 200, update_data)
+
+    def test_delete_baseline(self):
+        """Test deleting baseline"""
+        if not self.created_baseline_id:
+            print("   ⚠️ Skipped - No baseline ID available")
+            return True
+        return self.run_test("Delete Baseline", "DELETE", f"baseline/{self.created_baseline_id}", 200, expect_json=False)
+
+    def test_enhanced_risk_calculation(self):
+        """Test enhanced risk calculation with baseline deviation"""
+        if not self.created_patient_id:
+            print("   ⚠️ Skipped - No patient ID available")
+            return True
+        
+        # Test patient detail endpoint includes baseline deviation in risk calculation
+        success, response = self.run_test("Enhanced Risk with Baseline", "GET", f"patients/{self.created_patient_id}", 200)
+        if success:
+            # Check if predictive_warning field exists
+            if 'predictive_warning' in response:
+                print(f"   ✅ Has predictive_warning field: {response['predictive_warning']}")
+            else:
+                print(f"   ⚠️ Missing predictive_warning field")
+            
+            # Check if baseline is included
+            if 'baseline' in response:
+                print(f"   ✅ Has baseline data")
+            else:
+                print(f"   ⚠️ Missing baseline data")
+                
+            # Check if multimodal is included  
+            if 'multimodal' in response:
+                print(f"   ✅ Has multimodal data")
+            else:
+                print(f"   ⚠️ Missing multimodal data")
+        return success
+
 def main():
     print("🏥 VitalSense AI - Backend API Testing")
     print("=" * 50)
@@ -242,6 +411,29 @@ def main():
     # Alerts Tests
     tests.extend([
         tester.test_get_alerts,
+    ])
+    
+    # New Feature Tests - Multimodal API
+    tests.extend([
+        tester.test_create_multimodal,
+        tester.test_get_multimodal,
+        tester.test_get_multimodal_by_id,
+        tester.test_update_multimodal,
+        tester.test_delete_multimodal,
+    ])
+    
+    # New Feature Tests - Baseline API
+    tests.extend([
+        tester.test_create_baseline,
+        tester.test_get_baseline,
+        tester.test_get_baseline_by_id,
+        tester.test_update_baseline,
+        tester.test_delete_baseline,
+    ])
+    
+    # Enhanced Risk Calculation Tests
+    tests.extend([
+        tester.test_enhanced_risk_calculation,
     ])
     
     # Run all tests

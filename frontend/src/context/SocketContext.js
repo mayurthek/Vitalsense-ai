@@ -55,14 +55,15 @@ export const SocketProvider = ({ children }) => {
         newVitalsData[patient.id] = {
           vitals: patient.current_vitals,
           risk_level: patient.risk_level,
-          risk_score: patient.risk_score
+          risk_score: patient.risk_score,
+          predictive_warning: patient.predictive_warning
         };
         
-        // Play sound for new critical patients
-        if (patient.risk_level === 'CRITICAL' && !lastCriticalRef.current[patient.id]) {
+        // Play sound for new critical patients or predictive warnings
+        if ((patient.risk_level === 'CRITICAL' || patient.predictive_warning) && !lastCriticalRef.current[patient.id]) {
           playAlertSound();
         }
-        lastCriticalRef.current[patient.id] = patient.risk_level === 'CRITICAL';
+        lastCriticalRef.current[patient.id] = patient.risk_level === 'CRITICAL' || patient.predictive_warning;
       });
       
       setVitalsData(newVitalsData);

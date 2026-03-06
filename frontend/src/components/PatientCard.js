@@ -1,12 +1,13 @@
 import { useMemo, useState, useEffect } from 'react';
 import RiskBadge from './RiskBadge';
 import ECGChart from './ECGChart';
-import { Heart, Activity, Droplets, Thermometer, Wind, User, Bed } from 'lucide-react';
+import { Heart, Activity, Droplets, Thermometer, Wind, User, Bed, TrendingDown } from 'lucide-react';
 
 export default function PatientCard({ patient, onClick, style }) {
   const vitals = patient.current_vitals || {};
   const riskLevel = patient.risk_level || 'LOW';
   const isCritical = riskLevel === 'CRITICAL';
+  const predictiveWarning = patient.predictive_warning || false;
   const [pulse, setPulse] = useState(false);
 
   // Trigger pulse animation when vitals change
@@ -21,10 +22,18 @@ export default function PatientCard({ patient, onClick, style }) {
       onClick={onClick}
       className={`vital-card p-5 cursor-pointer hover:-translate-y-1 transition-all duration-300 ${
         isCritical ? 'critical' : 'hover:border-[#00d4ff]/30 hover:shadow-cyan'
-      } ${pulse ? 'ring-1 ring-[#00d4ff]/30' : ''}`}
+      } ${pulse ? 'ring-1 ring-[#00d4ff]/30' : ''} ${predictiveWarning ? 'border-orange-500/50' : ''}`}
       style={style}
       data-testid={`patient-card-${patient.id}`}
     >
+      {/* Predictive Warning Banner */}
+      {predictiveWarning && (
+        <div className="flex items-center gap-2 mb-3 p-2 bg-orange-950/50 border border-orange-700 rounded-lg">
+          <TrendingDown className="w-4 h-4 text-orange-400" />
+          <span className="text-xs text-orange-300 font-medium">Deterioration predicted</span>
+        </div>
+      )}
+      
       {/* Header */}
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-3">

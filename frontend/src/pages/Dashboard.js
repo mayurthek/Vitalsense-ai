@@ -37,20 +37,24 @@ export default function Dashboard() {
         ...patient,
         current_vitals: liveData.vitals,
         risk_level: liveData.risk_level,
-        risk_score: liveData.risk_score
+        risk_score: liveData.risk_score,
+        predictive_warning: liveData.predictive_warning
       };
     }
     return patient;
   });
 
-  // Sort by risk level (critical first)
+  // Sort by risk level (critical first), then predictive warnings
   const sortedPatients = [...patientsWithVitals].sort((a, b) => {
     const riskOrder = { CRITICAL: 0, HIGH: 1, MODERATE: 2, LOW: 3 };
-    return (riskOrder[a.risk_level] || 4) - (riskOrder[b.risk_level] || 4);
+    const aScore = (riskOrder[a.risk_level] || 4) - (a.predictive_warning ? 0.5 : 0);
+    const bScore = (riskOrder[b.risk_level] || 4) - (b.predictive_warning ? 0.5 : 0);
+    return aScore - bScore;
   });
 
   const criticalCount = sortedPatients.filter(p => p.risk_level === 'CRITICAL').length;
   const highCount = sortedPatients.filter(p => p.risk_level === 'HIGH').length;
+  const predictiveCount = sortedPatients.filter(p => p.predictive_warning).length;
 
   return (
     <div className="min-h-screen bg-[#0b1320]" data-testid="dashboard-page">
