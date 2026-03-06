@@ -360,6 +360,21 @@ async def get_doctor(doctor_id: str, current_user: dict = Depends(get_current_us
         raise HTTPException(status_code=404, detail="Doctor not found")
     return DoctorResponse(**doctor)
 
+@api_router.delete("/doctors/{doctor_id}")
+async def delete_doctor(doctor_id: str, current_user: dict = Depends(get_current_user)):
+    # Check if doctor exists
+    doctor = await db.doctors.find_one({'id': doctor_id})
+    if not doctor:
+        raise HTTPException(status_code=404, detail="Doctor not found")
+    
+    # Check if doctor has assigned patients
+    assigned_patients = await db.patients.count_documents({'assigned_doctor_id': doctor_id})
+    if assigned_patients > 0:
+        raise HTTPException(status_code=400, detail=f"Cannot delete doctor with {assigned_patients} assigned patients")
+    
+    await db.doctors.delete_one({'id': doctor_id})
+    return {"message": "Doctor deleted successfully"}
+
 # ======================== PATIENT ROUTES ========================
 
 @api_router.post("/patients", response_model=PatientResponse)
@@ -422,6 +437,27 @@ async def get_patient(patient_id: str, current_user: dict = Depends(get_current_
         'alerts': alerts
     }
 
+@api_router.delete("/patients/{patient_id}")
+async def delete_patient(patient_id: str, current_user: dict = Depends(get_current_user)):
+    # Check if patient exists
+    patient = await db.patients.find_one({'id': patient_id})
+    if not patient:
+        raise HTTPException(status_code=404, detail="Patient not found")
+    
+    # Delete patient
+    await db.patients.delete_one({'id': patient_id})
+    
+    # Clean up vitals data
+    if patient_id in patient_vitals:
+        del patient_vitals[patient_id]
+    if patient_id in patient_vital_history:
+        del patient_vital_history[patient_id]
+    
+    # Delete associated alerts
+    await db.alerts.delete_many({'patient_id': patient_id})
+    
+    return {"message": "Patient discharged successfully"}
+
 # ======================== ALERTS ROUTES ========================
 
 @api_router.get("/alerts", response_model=List[AlertResponse])
@@ -471,7 +507,7 @@ async def leave_patient_room(sid, data):
 # ======================== VITALS BROADCAST ========================
 
 async def broadcast_vitals():
-    """Broadcast vitals to all connected clients every 2 seconds"""
+    """Broadcast vitals to all connected clients every 3 seconds"""
     while True:
         try:
             patients = await db.patients.find({}, {'_id': 0}).to_list(1000)
@@ -522,7 +558,7 @@ async def broadcast_vitals():
         except Exception as e:
             logger.error(f"Error broadcasting vitals: {e}")
         
-        await asyncio.sleep(2)
+        await asyncio.sleep(3)
 
 # ======================== STARTUP/SHUTDOWN ========================
 

@@ -7,10 +7,11 @@ import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Checkbox } from '../components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '../components/ui/alert-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Skeleton } from '../components/ui/skeleton';
 import { toast } from 'sonner';
-import { Plus, Users, Bed, User, Droplets, AlertCircle } from 'lucide-react';
+import { Plus, Users, Bed, User, Droplets, AlertCircle, Trash2 } from 'lucide-react';
 import RiskBadge from '../components/RiskBadge';
 
 export default function PatientManagement() {
@@ -92,6 +93,17 @@ export default function PatientManagement() {
       fetchData();
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Failed to add patient');
+    }
+  };
+
+  const handleDelete = async (e, patientId, patientName) => {
+    e.stopPropagation();
+    try {
+      await patientsAPI.delete(patientId);
+      toast.success(`${patientName} discharged successfully`);
+      fetchData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to discharge patient');
     }
   };
 
@@ -360,18 +372,52 @@ export default function PatientManagement() {
                       <RiskBadge level={patient.risk_level || 'LOW'} />
                     </td>
                     <td className="p-4">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="text-[#00d4ff] hover:bg-[#00d4ff]/10"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigate(`/patient/${patient.id}`);
-                        }}
-                        data-testid={`view-patient-${patient.id}`}
-                      >
-                        View Details
-                      </Button>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="text-[#00d4ff] hover:bg-[#00d4ff]/10"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/patient/${patient.id}`);
+                          }}
+                          data-testid={`view-patient-${patient.id}`}
+                        >
+                          View
+                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="text-red-400 hover:text-red-300 hover:bg-red-950/50"
+                              onClick={(e) => e.stopPropagation()}
+                              data-testid={`delete-patient-${patient.id}`}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent className="bg-[#121a2f] border-slate-700">
+                            <AlertDialogHeader>
+                              <AlertDialogTitle className="text-[#e6edf3]">Discharge Patient</AlertDialogTitle>
+                              <AlertDialogDescription className="text-[#94a3b8]">
+                                Are you sure you want to discharge {patient.name}? This will remove all their monitoring data and alerts.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel className="bg-[#1e293b] border-slate-600 text-[#e6edf3] hover:bg-[#2d3a4f]">
+                                Cancel
+                              </AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={(e) => handleDelete(e, patient.id, patient.name)}
+                                className="bg-red-600 text-white hover:bg-red-700"
+                              >
+                                Discharge
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
                     </td>
                   </tr>
                 ))}

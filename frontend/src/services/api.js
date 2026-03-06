@@ -45,6 +45,7 @@ export const doctorsAPI = {
   getAll: () => api.get('/doctors'),
   getById: (id) => api.get(`/doctors/${id}`),
   create: (data) => api.post('/doctors', data),
+  delete: (id) => api.delete(`/doctors/${id}`),
 };
 
 // Patients API
@@ -52,6 +53,7 @@ export const patientsAPI = {
   getAll: () => api.get('/patients'),
   getById: (id) => api.get(`/patients/${id}`),
   create: (data) => api.post('/patients', data),
+  delete: (id) => api.delete(`/patients/${id}`),
 };
 
 // Alerts API

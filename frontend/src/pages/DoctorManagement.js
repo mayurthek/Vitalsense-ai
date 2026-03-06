@@ -5,9 +5,10 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '../components/ui/alert-dialog';
 import { Skeleton } from '../components/ui/skeleton';
 import { toast } from 'sonner';
-import { Plus, User, Stethoscope, Clock, Phone, Badge, Building } from 'lucide-react';
+import { Plus, User, Stethoscope, Clock, Phone, Badge, Building, Trash2 } from 'lucide-react';
 
 export default function DoctorManagement() {
   const [doctors, setDoctors] = useState([]);
@@ -54,6 +55,16 @@ export default function DoctorManagement() {
       fetchDoctors();
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Failed to add doctor');
+    }
+  };
+
+  const handleDelete = async (doctorId, doctorName) => {
+    try {
+      await doctorsAPI.delete(doctorId);
+      toast.success(`Dr. ${doctorName} removed successfully`);
+      fetchDoctors();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to delete doctor');
     }
   };
 
@@ -200,6 +211,37 @@ export default function DoctorManagement() {
                     <h3 className="text-lg font-semibold text-[#e6edf3]">{doctor.name}</h3>
                     <p className="text-[#00d4ff] text-sm">{doctor.specialization}</p>
                   </div>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="text-red-400 hover:text-red-300 hover:bg-red-950/50"
+                        data-testid={`delete-doctor-${doctor.id}`}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent className="bg-[#121a2f] border-slate-700">
+                      <AlertDialogHeader>
+                        <AlertDialogTitle className="text-[#e6edf3]">Remove Doctor</AlertDialogTitle>
+                        <AlertDialogDescription className="text-[#94a3b8]">
+                          Are you sure you want to remove Dr. {doctor.name}? This action cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel className="bg-[#1e293b] border-slate-600 text-[#e6edf3] hover:bg-[#2d3a4f]">
+                          Cancel
+                        </AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => handleDelete(doctor.id, doctor.name)}
+                          className="bg-red-600 text-white hover:bg-red-700"
+                        >
+                          Remove
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </div>
                 
                 <div className="mt-4 space-y-2 text-sm">
