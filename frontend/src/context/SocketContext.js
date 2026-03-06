@@ -21,19 +21,25 @@ export const SocketProvider = ({ children }) => {
     const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
     
     socketRef.current = io(BACKEND_URL, {
-      transports: ['websocket', 'polling'],
+      path: '/socket.io/',
+      transports: ['polling', 'websocket'],
       reconnection: true,
-      reconnectionAttempts: 5,
+      reconnectionAttempts: 10,
       reconnectionDelay: 1000,
+      timeout: 20000,
     });
 
     socketRef.current.on('connect', () => {
-      console.log('Socket connected');
+      console.log('Socket connected:', socketRef.current.id);
       setConnected(true);
     });
 
-    socketRef.current.on('disconnect', () => {
-      console.log('Socket disconnected');
+    socketRef.current.on('connect_error', (error) => {
+      console.log('Socket connection error:', error.message);
+    });
+
+    socketRef.current.on('disconnect', (reason) => {
+      console.log('Socket disconnected:', reason);
       setConnected(false);
     });
 
