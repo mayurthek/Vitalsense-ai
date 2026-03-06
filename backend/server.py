@@ -601,10 +601,16 @@ async def login(credentials: UserLogin):
         raise HTTPException(status_code=401, detail="Invalid credentials")
     
     token = create_token(user['id'], user['role'])
-    return {
-        'token': token,
-        'user': {'id': user['id'], 'email': user['email'], 'name': user['name'], 'role': user['role']}
+  return {
+    "access_token": token,
+    "token_type": "bearer",
+    "user": {
+        "id": user["id"],
+        "email": user["email"],
+        "name": user["name"],
+        "role": user["role"]
     }
+}
 
 @api_router.get("/auth/me", response_model=UserResponse)
 async def get_me(current_user: dict = Depends(get_current_user)):
