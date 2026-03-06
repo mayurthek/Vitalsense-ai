@@ -1,53 +1,83 @@
-import { useEffect } from "react";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { Toaster } from "sonner";
+import { AuthProvider, useAuth } from "./context/AuthContext";
+import { SocketProvider } from "./context/SocketContext";
+import Login from "./pages/Login";
+import Dashboard from "./pages/Dashboard";
+import PatientDetail from "./pages/PatientDetail";
+import DoctorManagement from "./pages/DoctorManagement";
+import PatientManagement from "./pages/PatientManagement";
+import Alerts from "./pages/Alerts";
 import "@/App.css";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import axios from "axios";
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
-
-const Home = () => {
-  const helloWorldApi = async () => {
-    try {
-      const response = await axios.get(`${API}/`);
-      console.log(response.data.message);
-    } catch (e) {
-      console.error(e, `errored out requesting / api`);
-    }
-  };
-
-  useEffect(() => {
-    helloWorldApi();
-  }, []);
-
-  return (
-    <div>
-      <header className="App-header">
-        <a
-          className="App-link"
-          href="https://emergent.sh"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <img src="https://avatars.githubusercontent.com/in/1201222?s=120&u=2686cf91179bbafbc7a71bfbc43004cf9ae1acea&v=4" />
-        </a>
-        <p className="mt-5">Building something incredible ~!</p>
-      </header>
-    </div>
-  );
+const ProtectedRoute = ({ children }) => {
+  const { user, loading } = useAuth();
+  
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#0b1320] flex items-center justify-center">
+        <div className="text-[#00d4ff] text-xl font-mono">Loading...</div>
+      </div>
+    );
+  }
+  
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+  
+  return children;
 };
 
 function App() {
   return (
-    <div className="App">
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Home />}>
-            <Route index element={<Home />} />
-          </Route>
-        </Routes>
-      </BrowserRouter>
-    </div>
+    <AuthProvider>
+      <SocketProvider>
+        <div className="App min-h-screen bg-[#0b1320]">
+          <BrowserRouter>
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route path="/" element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              } />
+              <Route path="/patient/:id" element={
+                <ProtectedRoute>
+                  <PatientDetail />
+                </ProtectedRoute>
+              } />
+              <Route path="/doctors" element={
+                <ProtectedRoute>
+                  <DoctorManagement />
+                </ProtectedRoute>
+              } />
+              <Route path="/patients" element={
+                <ProtectedRoute>
+                  <PatientManagement />
+                </ProtectedRoute>
+              } />
+              <Route path="/alerts" element={
+                <ProtectedRoute>
+                  <Alerts />
+                </ProtectedRoute>
+              } />
+            </Routes>
+          </BrowserRouter>
+          <Toaster 
+            position="top-right" 
+            richColors 
+            theme="dark"
+            toastOptions={{
+              style: {
+                background: '#121a2f',
+                border: '1px solid #1e293b',
+                color: '#e6edf3'
+              }
+            }}
+          />
+        </div>
+      </SocketProvider>
+    </AuthProvider>
   );
 }
 

@@ -1,75 +1,44 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Manrope:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-body {
-    margin: 0;
-    font-family:
-        -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
-        "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
-        sans-serif;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-}
-
-code {
-    font-family:
-        source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
-}
-
 @layer base {
     :root {
-        --background: 0 0% 100%;
-        --foreground: 0 0% 3.9%;
-        --card: 0 0% 100%;
-        --card-foreground: 0 0% 3.9%;
-        --popover: 0 0% 100%;
-        --popover-foreground: 0 0% 3.9%;
-        --primary: 0 0% 9%;
-        --primary-foreground: 0 0% 98%;
-        --secondary: 0 0% 96.1%;
-        --secondary-foreground: 0 0% 9%;
-        --muted: 0 0% 96.1%;
-        --muted-foreground: 0 0% 45.1%;
-        --accent: 0 0% 96.1%;
-        --accent-foreground: 0 0% 9%;
-        --destructive: 0 84.2% 60.2%;
+        --background: 214 32% 8%;
+        --foreground: 210 40% 93%;
+        --card: 220 35% 12%;
+        --card-foreground: 210 40% 93%;
+        --popover: 220 35% 12%;
+        --popover-foreground: 210 40% 93%;
+        --primary: 190 100% 50%;
+        --primary-foreground: 0 0% 0%;
+        --secondary: 142 69% 58%;
+        --secondary-foreground: 0 0% 0%;
+        --muted: 217 33% 17%;
+        --muted-foreground: 215 20% 65%;
+        --accent: 190 100% 50%;
+        --accent-foreground: 0 0% 0%;
+        --destructive: 0 84% 60%;
         --destructive-foreground: 0 0% 98%;
-        --border: 0 0% 89.8%;
-        --input: 0 0% 89.8%;
-        --ring: 0 0% 3.9%;
-        --chart-1: 12 76% 61%;
-        --chart-2: 173 58% 39%;
-        --chart-3: 197 37% 24%;
-        --chart-4: 43 74% 66%;
-        --chart-5: 27 87% 67%;
-        --radius: 0.5rem;
-    }
-    .dark {
-        --background: 0 0% 3.9%;
-        --foreground: 0 0% 98%;
-        --card: 0 0% 3.9%;
-        --card-foreground: 0 0% 98%;
-        --popover: 0 0% 3.9%;
-        --popover-foreground: 0 0% 98%;
-        --primary: 0 0% 98%;
-        --primary-foreground: 0 0% 9%;
-        --secondary: 0 0% 14.9%;
-        --secondary-foreground: 0 0% 98%;
-        --muted: 0 0% 14.9%;
-        --muted-foreground: 0 0% 63.9%;
-        --accent: 0 0% 14.9%;
-        --accent-foreground: 0 0% 98%;
-        --destructive: 0 62.8% 30.6%;
-        --destructive-foreground: 0 0% 98%;
-        --border: 0 0% 14.9%;
-        --input: 0 0% 14.9%;
-        --ring: 0 0% 83.1%;
-        --chart-1: 220 70% 50%;
-        --chart-2: 160 60% 45%;
-        --chart-3: 30 80% 55%;
-        --chart-4: 280 65% 60%;
-        --chart-5: 340 75% 55%;
+        --border: 217 33% 17%;
+        --input: 217 33% 17%;
+        --ring: 190 100% 50%;
+        --radius: 0.75rem;
+        
+        /* Custom VitalSense colors */
+        --vital-bg: #0b1320;
+        --vital-surface: #121a2f;
+        --vital-surface-highlight: #1e293b;
+        --vital-cyan: #00d4ff;
+        --vital-green: #4ade80;
+        --vital-text: #e6edf3;
+        --vital-text-secondary: #94a3b8;
+        --risk-low: #22c55e;
+        --risk-moderate: #facc15;
+        --risk-high: #f97316;
+        --risk-critical: #ef4444;
     }
 }
 
@@ -77,39 +46,180 @@ code {
     * {
         @apply border-border;
     }
+    
     body {
-        @apply bg-background text-foreground;
+        @apply bg-[#0b1320] text-[#e6edf3];
+        font-family: 'Manrope', sans-serif;
+    }
+    
+    h1, h2, h3, h4, h5, h6 {
+        font-family: 'Manrope', sans-serif;
+    }
+    
+    .font-mono, .vital-value {
+        font-family: 'JetBrains Mono', monospace;
     }
 }
 
-@layer base {
-    [data-debug-wrapper="true"] {
-        display: contents !important;
-    }
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
 
-    [data-debug-wrapper="true"] > * {
-        margin-left: inherit;
-        margin-right: inherit;
-        margin-top: inherit;
-        margin-bottom: inherit;
-        padding-left: inherit;
-        padding-right: inherit;
-        padding-top: inherit;
-        padding-bottom: inherit;
-        column-gap: inherit;
-        row-gap: inherit;
-        gap: inherit;
-        border-left-width: inherit;
-        border-right-width: inherit;
-        border-top-width: inherit;
-        border-bottom-width: inherit;
-        border-left-style: inherit;
-        border-right-style: inherit;
-        border-top-style: inherit;
-        border-bottom-style: inherit;
-        border-left-color: inherit;
-        border-right-color: inherit;
-        border-top-color: inherit;
-        border-bottom-color: inherit;
+::-webkit-scrollbar-track {
+    background: #0b1320;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #1e293b;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #334155;
+}
+
+/* Animations */
+@keyframes pulse-glow {
+    0%, 100% {
+        box-shadow: 0 0 20px rgba(239, 68, 68, 0.3);
     }
+    50% {
+        box-shadow: 0 0 40px rgba(239, 68, 68, 0.6);
+    }
+}
+
+@keyframes ecg-line {
+    0% {
+        stroke-dashoffset: 1000;
+    }
+    100% {
+        stroke-dashoffset: 0;
+    }
+}
+
+@keyframes vital-pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.02);
+    }
+}
+
+@keyframes fade-in {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slide-in {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.animate-pulse-glow {
+    animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.animate-vital-pulse {
+    animation: vital-pulse 2s ease-in-out infinite;
+}
+
+.animate-fade-in {
+    animation: fade-in 0.3s ease-out forwards;
+}
+
+.animate-slide-in {
+    animation: slide-in 0.3s ease-out forwards;
+}
+
+/* Glass effect */
+.glass {
+    background: rgba(18, 26, 47, 0.8);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
+
+/* Card styles */
+.vital-card {
+    @apply bg-[#121a2f] border border-slate-800 rounded-xl transition-all duration-300;
+}
+
+.vital-card:hover {
+    @apply border-slate-700;
+    box-shadow: 0 0 20px rgba(0, 212, 255, 0.1);
+}
+
+.vital-card.critical {
+    @apply border-2 border-red-500;
+    animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* Risk badges */
+.risk-badge {
+    @apply px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider;
+}
+
+.risk-badge.low {
+    @apply bg-green-950 text-green-400 border border-green-800;
+}
+
+.risk-badge.moderate {
+    @apply bg-yellow-950 text-yellow-400 border border-yellow-800;
+}
+
+.risk-badge.high {
+    @apply bg-orange-950 text-orange-400 border border-orange-800;
+}
+
+.risk-badge.critical {
+    @apply bg-red-950 text-red-400 border border-red-800 animate-pulse;
+}
+
+/* Button glow */
+.btn-glow {
+    @apply transition-all duration-300;
+    box-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
+}
+
+.btn-glow:hover {
+    box-shadow: 0 0 25px rgba(0, 212, 255, 0.5);
+}
+
+/* ECG animation */
+.ecg-path {
+    stroke-dasharray: 1000;
+    animation: ecg-line 2s linear infinite;
+}
+
+/* Input focus glow */
+input:focus, select:focus, textarea:focus {
+    @apply ring-1 ring-[#00d4ff] border-[#00d4ff];
+    box-shadow: 0 0 10px rgba(0, 212, 255, 0.2);
+}
+
+/* Table styles */
+.vital-table th {
+    @apply bg-[#1e293b] text-[#94a3b8] font-semibold uppercase text-xs tracking-wider;
+}
+
+.vital-table td {
+    @apply border-b border-slate-800;
+}
+
+.vital-table tr:hover td {
+    @apply bg-[#1e293b]/50;
 }
