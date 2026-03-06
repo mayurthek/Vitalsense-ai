@@ -590,9 +590,15 @@ async def register(user: UserCreate):
     
     token = create_token(user_id, user.role)
     return {
-        'token': token,
-        'user': {'id': user_id, 'email': user.email, 'name': user.name, 'role': user.role}
+    "access_token": token,
+    "token_type": "bearer",
+    "user": {
+        "id": user_id,
+        "email": user.email,
+        "name": user.name,
+        "role": user.role
     }
+}
 
 @api_router.post("/auth/login", response_model=dict)
 async def login(credentials: UserLogin):
